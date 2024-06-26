@@ -93,6 +93,33 @@ public class Main {
                     }
                 }
                 System.out.println();
+            } else if (arrofstr[0].startsWith("./")) {
+                File executable = new File(currentDirectory, arrofstr[0]);
+                if (executable.exists() && executable.canExecute()) {
+                    try {
+                        ProcessBuilder processBuilder = new ProcessBuilder(arrofstr);
+                        processBuilder.directory(new File(currentDirectory));
+                        Process process = processBuilder.start();
+
+                        // Capture the output and error streams
+                        Scanner processOutputScanner = new Scanner(process.getInputStream());
+                        Scanner processErrorScanner = new Scanner(process.getErrorStream());
+
+                        while (processOutputScanner.hasNextLine()) {
+                            System.out.println(processOutputScanner.nextLine());
+                        }
+                        while (processErrorScanner.hasNextLine()) {
+                            System.err.println(processErrorScanner.nextLine());
+                        }
+
+                        process.waitFor();
+                    } catch (IOException | InterruptedException e) {
+                        System.err.println("Error executing command: " + e.getMessage());
+                        e.printStackTrace();
+                    }
+                } else {
+                    System.out.println(arrofstr[0] + ": No such file or directory or not executable");
+                }
             } else {
                 String pathEnv = System.getenv("PATH");
                 boolean found = false;
