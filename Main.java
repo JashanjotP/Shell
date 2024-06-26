@@ -1,4 +1,7 @@
 import java.util.Scanner;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -16,6 +19,19 @@ public class Main {
             }
         }
         return null;
+    }
+
+    private static String[] parseCommand(String input) {
+        ArrayList<String> command = new ArrayList<>();
+        Matcher matcher = Pattern.compile("\"([^\"]*)\"|(\\S+)").matcher(input);
+        while (matcher.find()) {
+            if (matcher.group(1) != null) {
+                command.add(matcher.group(1));
+            } else {
+                command.add(matcher.group(2));
+            }
+        }
+        return command.toArray(new String[0]);
     }
 
     public static final String ANSI_BLUE = "\u001B[34m";
@@ -48,7 +64,7 @@ public class Main {
         do {
             System.out.print(ANSI_BRIGHT_GREEN + user + "@" + hostName + ANSI_RESET + ":" + ANSI_BLUE + currentDirectory + ANSI_RESET + "$ ");
             input = scanner.nextLine();
-            String[] arrofstr = input.split(" ");
+            String[] arrofstr = parseCommand(input);
             if (arrofstr[0].equals("exit")) {
                 break;
             } else if (arrofstr[0].equals("echo")) {
