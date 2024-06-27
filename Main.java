@@ -56,9 +56,8 @@ public class Main {
         BuiltInCommands.add("echo");
         BuiltInCommands.add("exit");
         BuiltInCommands.add("type");
-        BuiltInCommands.add("clear");
         BuiltInCommands.add("pwd");
-       
+       BuiltInCommands.add("cd");
         String input;
 
         do {
@@ -87,11 +86,25 @@ public class Main {
                         System.out.println(arrofstr[1] + ": not found");
                     }
                 }
-            } else if (arrofstr[0].equals("clear")) {
-                System.out.print("\033[H\033[2J");
-                System.out.flush();
             } else if (arrofstr[0].equals("pwd")) {
                 System.out.println(currentDirectory);
+            }else if (arrofstr[0].equals("cd")) {
+                if (arrofstr.length > 1) {
+                    String newPath = arrofstr[1];
+                    if (newPath.equals("~")) {
+                        newPath = System.getProperty("user.home");
+                    } else if (!new File(newPath).isAbsolute()) {
+                        newPath = currentDirectory + File.separator + newPath;
+                    }
+                    File newDir = new File(newPath);
+                    if (newDir.exists() && newDir.isDirectory()) {
+                        currentDirectory = newDir.getCanonicalPath();
+                    } else {
+                        System.out.println("cd: " + arrofstr[1] + ": No such file or directory");
+                    }
+                } else {
+                    currentDirectory = System.getProperty("user.home");
+                }
             } else if (arrofstr[0].equals("ls")) {
                 File directory = new File(currentDirectory);
                 File[] files = directory.listFiles();
