@@ -129,6 +129,8 @@ public class Main {
                         }
 
                         process.waitFor();
+                        processOutputScanner.close();
+                        processErrorScanner.close();
                     } catch (IOException | InterruptedException e) {
                         System.err.println("Error executing command: " + e.getMessage());
                         e.printStackTrace();
@@ -163,6 +165,8 @@ public class Main {
 
                                 process.waitFor();
                                 found = true;
+                                processOutputScanner.close();
+                                processErrorScanner.close();
                                 break;
                             } catch (IOException | InterruptedException e) {
                                 System.err.println("Error executing command: " + e.getMessage());
