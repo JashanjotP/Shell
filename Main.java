@@ -57,15 +57,28 @@ public class Main {
         BuiltInCommands.add("exit");
         BuiltInCommands.add("type");
         BuiltInCommands.add("pwd");
-       BuiltInCommands.add("cd");
+        BuiltInCommands.add("cd");
+        BuiltInCommands.add("ls");
+        BuiltInCommands.add("history");
+        ArrayList<String> history = new ArrayList<>();
+        int historyIndex = 0;
         String input;
 
         do {
             System.out.print(ANSI_BRIGHT_GREEN + user + "@" + hostName + ANSI_RESET + ":" + ANSI_BLUE + currentDirectory + ANSI_RESET + "$ ");
             input = scanner.nextLine();
+            if(input.isEmpty()){
+                continue;
+            }
+
+            history.add(input);
             String[] arrofstr = parseCommand(input);
             if (arrofstr[0].equals("exit")) {
                 break;
+            }else if (input.equals("history")) {
+                for (String cmd : history) {
+                    System.out.println(cmd);
+                }
             } else if (arrofstr[0].equals("echo")) {
                 for (int i = 1; i < arrofstr.length; i++) {
                     System.out.print(arrofstr[i]);
@@ -100,7 +113,7 @@ public class Main {
                     if (newDir.exists() && newDir.isDirectory()) {
                         currentDirectory = newDir.getCanonicalPath();
                     } else {
-                        System.out.println("cd: " + arrofstr[1] + ": No such file or directory");
+                        System.out.println("cd: " + arrofstr[1] + ": No such directory");
                     }
                 } else {
                     currentDirectory = System.getProperty("user.home");
