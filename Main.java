@@ -215,6 +215,9 @@ public class Main {
                 File file = new File(path, arrofstr[0]);
                 if (file.exists() && file.canExecute()) {
                     try {
+                        for(int i=0; i<arrofstr.length; i++){
+                            System.out.println(arrofstr[i]);
+                        }
                         ProcessBuilder processBuilder = new ProcessBuilder(arrofstr);
                         processBuilder.directory(new File(currentDirectory));
                         Process process = processBuilder.start();
