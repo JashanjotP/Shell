@@ -1,14 +1,7 @@
-import java.util.Scanner;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Arrays;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
-import java.nio.file.Path;
-import java.nio.file.Files;
+import java.util.regex.*;
+import java.util.*;
+import java.net.*;
+import java.nio.file.*;
 import java.io.*;
 
 public class Main {
@@ -245,51 +238,51 @@ public class Main {
     }
 
     private static void executePipedCommands(List<String[]> pipedCommands, String currentDirectory) throws IOException, InterruptedException {
-    if (pipedCommands.size() != 2) {
-        throw new IllegalArgumentException("Piped commands should contain exactly two command arrays.");
-    }
-
-    String[] command1 = pipedCommands.get(0);
-    String[] command2 = pipedCommands.get(1);
-
-    ProcessBuilder pb1 = new ProcessBuilder(command1);
-    pb1.directory(new File(currentDirectory));
-    Process process1 = pb1.start();
-
-    // Capture the output of the first process
-    ByteArrayOutputStream baos = new ByteArrayOutputStream();
-    try (BufferedReader reader = new BufferedReader(new InputStreamReader(process1.getInputStream()));
-         BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(baos))) {
-        
-        String line;
-        while ((line = reader.readLine()) != null) {
-            writer.write(line);
-            writer.newLine();
+        if (pipedCommands.size() != 2) {
+            throw new IllegalArgumentException("Piped commands should contain exactly two command arrays.");
         }
-    }
 
-    process1.waitFor();
+        String[] command1 = pipedCommands.get(0);
+        String[] command2 = pipedCommands.get(1);
 
-    // Start the second process
-    ProcessBuilder pb2 = new ProcessBuilder(command2);
-    pb2.directory(new File(currentDirectory));
-    Process process2 = pb2.start();
+        ProcessBuilder pb1 = new ProcessBuilder(command1);
+        pb1.directory(new File(currentDirectory));
+        Process process1 = pb1.start();
 
-    // Write the output of the first process to the second process's input
-    try (BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(process2.getOutputStream()))) {
-        writer.write(baos.toString());
-    }
-
-    // Capture and print the output of the second process
-    try (BufferedReader reader = new BufferedReader(new InputStreamReader(process2.getInputStream()))) {
-        String line;
-        while ((line = reader.readLine()) != null) {
-            System.out.println(line);
+        // Capture the output of the first process
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(process1.getInputStream()));
+            BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(baos))) {
+            
+            String line;
+            while ((line = reader.readLine()) != null) {
+                writer.write(line);
+                writer.newLine();
+            }
         }
-    }
 
-    process2.waitFor();
-}
+        process1.waitFor();
+
+        // Start the second process
+        ProcessBuilder pb2 = new ProcessBuilder(command2);
+        pb2.directory(new File(currentDirectory));
+        Process process2 = pb2.start();
+
+        // Write the output of the first process to the second process's input
+        try (BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(process2.getOutputStream()))) {
+            writer.write(baos.toString());
+        }
+
+        // Capture and print the output of the second process
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(process2.getInputStream()))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                System.out.println(line);
+            }
+        }
+
+        process2.waitFor();
+    }
           
       
 }
