@@ -41,7 +41,7 @@ To run this application locally, follow these steps:
 
     ```bash
     git clone https://github.com/JashanjotP/Shell.git
-    cd Shell
+    cd Shell/Shell
     ```
 
 2. **Build the project** using Maven:
