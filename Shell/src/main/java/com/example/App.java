@@ -69,9 +69,9 @@ public class App {
     public static final String ANSI_BLUE = "\u001B[34m";
     public static final String ANSI_RESET = "\u001B[0m";
     public static final String ANSI_BRIGHT_GREEN = "\u001B[92m";
-
+    public static String currentDirectory = System.getProperty("user.dir");
     public static void main(String[] args) throws Exception {
-        String currentDirectory = System.getProperty("user.dir");
+        
         String user = System.getProperty("user.name");
         String hostName = "unknown";
 
@@ -84,7 +84,7 @@ public class App {
 
         Terminal terminal = TerminalBuilder.builder().system(true).build();
         List<String> BuiltInCommands = new ArrayList<>(Arrays.asList(
-   "cd","echo", "exit", "type", "pwd", "cd", "ls", "history"
+   "cd","echo", "exit", "type", "pwd", "ls", "history"
     ));
 
     List<String> ExternalCommands = getExecutableNamesFromPath();
@@ -109,15 +109,15 @@ public class App {
             // Handle each command in the pipeline
             if (pipedCommands.size() == 1) {
                 String[] arrofstr = pipedCommands.get(0);
-                executeSingleCommand(arrofstr, BuiltInCommands, currentDirectory, history);
+                executeSingleCommand(arrofstr, BuiltInCommands, history);
             } else {
-                executePipedCommands(pipedCommands, currentDirectory);
+                executePipedCommands(pipedCommands);
             }
 
         } while (true);
     }
 
-    private static void executeSingleCommand(String[] arrofstr, List<String> builtInCommands, String currentDirectory, ArrayList<String> history) throws IOException {
+    private static void executeSingleCommand(String[] arrofstr, List<String> builtInCommands, ArrayList<String> history) throws IOException {
         if (arrofstr[0].equals("exit")) {
             System.exit(0);
         } else if (arrofstr[0].equals("history")) {
@@ -148,7 +148,7 @@ public class App {
             }
         } else if (arrofstr[0].equals("pwd")) {
             System.out.println(currentDirectory);
-        } else if (arrofstr[0].equals("cd")) {
+        }  else if (arrofstr[0].equals("cd")) {
             if (arrofstr.length > 1) {
                 String newPath = arrofstr[1];
                 if (newPath.equals("~")) {
@@ -169,7 +169,9 @@ public class App {
             } else {
                 currentDirectory = System.getProperty("user.home");
             }
-        } else if (arrofstr[0].equals("ls")) {
+          }
+        
+         else if (arrofstr[0].equals("ls")) {
             File directory = new File(currentDirectory);
             File[] files = directory.listFiles();
 
@@ -216,11 +218,11 @@ public class App {
                 System.out.println(arrofstr[0] + ": No such file or directory or not executable");
             }
         } else {
-            executeExternalCommand(arrofstr, currentDirectory);
+            executeExternalCommand(arrofstr);
         }
     }
 
-    private static void executeExternalCommand(String[] arrofstr, String currentDirectory) {
+    private static void executeExternalCommand(String[] arrofstr) {
         String pathEnv = System.getenv("PATH");
         boolean found = false;
 
@@ -263,7 +265,7 @@ public class App {
         }
     }
 
-    private static void executePipedCommands(List<String[]> pipedCommands, String currentDirectory) throws IOException, InterruptedException {
+    private static void executePipedCommands(List<String[]> pipedCommands) throws IOException, InterruptedException {
         if (pipedCommands.size() != 2) {
             throw new IllegalArgumentException("Piped commands should contain exactly two command arrays.");
         }
