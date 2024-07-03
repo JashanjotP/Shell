@@ -1,12 +1,39 @@
-package com.example;
+package Shell.src.main.java.com.example;
 
 import java.util.regex.*;
 import java.util.*;
 import java.net.*;
 import java.nio.file.*;
 import java.io.*;
+import org.jline.reader.*;
+import org.jline.reader.impl.completer.*;
+import org.jline.terminal.*;
 
 public class App {
+    private static List<String> getExecutableNamesFromPath() {
+        List<String> executableNames = new ArrayList<>();
+
+        // Get PATH environment variable
+        String pathEnvVar = System.getenv("PATH");
+        if (pathEnvVar != null) {
+            String[] paths = pathEnvVar.split(File.pathSeparator);
+            for (String path : paths) {
+                File dir = new File(path);
+                if (dir.exists() && dir.isDirectory()) {
+                    File[] files = dir.listFiles();
+                    if (files != null) {
+                        for (File file : files) {
+                            if (file.canExecute() && !file.isDirectory()) {
+                                executableNames.add(file.getName());
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        return executableNames;
+    }
     private static String getPath(String parameter) {
         for (String path : System.getenv("PATH").split(":")) {
             Path fullPath = Path.of(path, parameter);
@@ -55,34 +82,34 @@ public class App {
             e.printStackTrace();
         }
 
-        Scanner scanner = new Scanner(System.in);
-        HashSet<String> builtInCommands = new HashSet<>();
+        Terminal terminal = TerminalBuilder.builder().system(true).build();
+        List<String> BuiltInCommands = new ArrayList<>(Arrays.asList(
+   "cd","echo", "exit", "type", "pwd", "cd", "ls", "history"
+    ));
 
-        builtInCommands.add("echo");
-        builtInCommands.add("exit");
-        builtInCommands.add("type");
-        builtInCommands.add("pwd");
-        builtInCommands.add("cd");
-        builtInCommands.add("ls");
-        builtInCommands.add("history");
+    List<String> ExternalCommands = getExecutableNamesFromPath();
+
+    List<String> AllCommands = new ArrayList<>(BuiltInCommands);
+    AllCommands.addAll(ExternalCommands);
+
+        LineReader lineReader = LineReaderBuilder.builder().terminal(terminal).completer(new TabCompleter(AllCommands)).build();
         ArrayList<String> history = new ArrayList<>();
-
+       
         String input;
 
         do {
-            System.out.print(ANSI_BRIGHT_GREEN + user + "@" + hostName + ANSI_RESET + ":" + ANSI_BLUE + currentDirectory + ANSI_RESET + "$ ");
-            input = scanner.nextLine();
-            if (input.isEmpty()) {
+            String prompt = ANSI_BRIGHT_GREEN + user + "@" + hostName + ANSI_RESET + ":" + ANSI_BLUE + currentDirectory + ANSI_RESET + "$ ";
+            input = lineReader.readLine(prompt);
+            if (input.trim().isEmpty()) {
                 continue;
             }
-
             history.add(input);
             List<String[]> pipedCommands = parsePipedCommands(input);
 
             // Handle each command in the pipeline
             if (pipedCommands.size() == 1) {
                 String[] arrofstr = pipedCommands.get(0);
-                executeSingleCommand(arrofstr, builtInCommands, currentDirectory, history);
+                executeSingleCommand(arrofstr, BuiltInCommands, currentDirectory, history);
             } else {
                 executePipedCommands(pipedCommands, currentDirectory);
             }
@@ -90,7 +117,7 @@ public class App {
         } while (true);
     }
 
-    private static void executeSingleCommand(String[] arrofstr, HashSet<String> builtInCommands, String currentDirectory, ArrayList<String> history) throws IOException {
+    private static void executeSingleCommand(String[] arrofstr, List<String> builtInCommands, String currentDirectory, ArrayList<String> history) throws IOException {
         if (arrofstr[0].equals("exit")) {
             System.exit(0);
         } else if (arrofstr[0].equals("history")) {
