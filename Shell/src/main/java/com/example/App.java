@@ -10,6 +10,21 @@ import org.jline.reader.impl.completer.*;
 import org.jline.terminal.*;
 
 public class App {
+    private static void redirectStreams(InputStream input, OutputStream output) {
+        new Thread(() -> {
+            try {
+                byte[] buffer = new byte[1024];
+                int bytesRead;
+                while ((bytesRead = input.read(buffer)) != -1) {
+                    output.write(buffer, 0, bytesRead);
+                    output.flush();
+                }
+                output.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }).start();
+    }
     private static List<String> getExecutableNamesFromPath() {
         List<String> executableNames = new ArrayList<>();
 
@@ -266,49 +281,35 @@ public class App {
     }
 
     private static void executePipedCommands(List<String[]> pipedCommands) throws IOException, InterruptedException {
-        if (pipedCommands.size() != 2) {
-            throw new IllegalArgumentException("Piped commands should contain exactly two command arrays.");
+        if (pipedCommands.size() < 2) {
+            throw new IllegalArgumentException("Piped commands should contain at least two command arrays.");
         }
 
-        String[] command1 = pipedCommands.get(0);
-        String[] command2 = pipedCommands.get(1);
-
-        ProcessBuilder pb1 = new ProcessBuilder(command1);
+        ProcessBuilder pb1 = new ProcessBuilder(pipedCommands.get(0));
         pb1.directory(new File(currentDirectory));
-        Process process1 = pb1.start();
+        Process p1 = pb1.start();
 
-        // Capture the output of the first process
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(process1.getInputStream()));
-            BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(baos))) {
+        Process previousProcess = p1;
 
-            String line;
-            while ((line = reader.readLine()) != null) {
-                writer.write(line);
-                writer.newLine();
+        for (int i = 1; i < pipedCommands.size(); i++) {
+            ProcessBuilder pb = new ProcessBuilder(pipedCommands.get(i));
+            pb.directory(new File(currentDirectory));
+
+            // Redirect the output of the previous process to the input of the next process
+            Process p = pb.start();
+            if (!Arrays.asList(pipedCommands.get(i)).contains("echo")) {
+                redirectStreams(previousProcess.getInputStream(), p.getOutputStream());
             }
+
+            previousProcess = p;
         }
 
-        process1.waitFor();
-
-        // Start the second process
-        ProcessBuilder pb2 = new ProcessBuilder(command2);
-        pb2.directory(new File(currentDirectory));
-        Process process2 = pb2.start();
-
-        // Write the output of the first process to the second process's input
-        try (BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(process2.getOutputStream()))) {
-            writer.write(baos.toString());
+        // Print the output of the final process
+        BufferedReader reader = new BufferedReader(new InputStreamReader(previousProcess.getInputStream()));
+        String line;
+        while ((line = reader.readLine()) != null) {
+            System.out.println(line);
         }
-
-        // Capture and print the output of the second process
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(process2.getInputStream()))) {
-            String line;
-            while ((line = reader.readLine()) != null) {
-                System.out.println(line);
-            }
-        }
-
-        process2.waitFor();
+        previousProcess.waitFor();
     }
 }
